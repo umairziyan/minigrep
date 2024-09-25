@@ -1,7 +1,7 @@
 # minigrep
 
 A simple version of `grep` (**g**lobally search a **r**egular **e**xpression and
-**p**rint). In the simplest use case, `grep` searches a specified file for a specified string. Minigrep accepts two arguments: a string and a file path. It reads the file and searches for lines that contain the specified string, then prints those matching lines.
+**p**rint). In the simplest use case, `grep` searches a specified file for a specified string (it allows regex patterns). Minigrep accepts two arguments: a string and a file path. It reads the file and searches for lines that contain the specified string, then prints those matching lines.
 
 ## Table of Contents
 
@@ -37,25 +37,24 @@ To run minigrep, execute the binary with the search string and the file to searc
 ```
 
 ```sh
-Usage: minigrep <search> <file> [options]
 
-Commands:
-    minigrep text [file]                    Search a [file] for matching lines which include text.
+Usage: minigrep [OPTIONS] <query> <file>
+
+Arguments:
+  <query>               The pattern to search for
+  <file>                The file to search
 
 Options:
-    IGNORE_CASE                             Enable case-insensitive searching.
-
-Examples:
-    minigrep text file.txt                  Performs a search in file.txt for text.
-    minigrep text file.txt > output         Performs a search in file.txt for text and stores the output in output file.
-    IGNORE_CASE=1 minigrep text file.txt    Performs a case-insensitive search in file.txt for text.
+  -i, --ignore-case     Case insensitive search
+  -h, --help            Print help
+  -V, --version         Print version
 ```
 
 ## Potential Features
 
-**Case Insensitivity (ADDED):** Add an option to perform case-insensitive searches. You could use a command-line argument to toggle this feature.
+~~**Case Insensitivity:** Add an option to perform case-insensitive searches. You could use a command-line argument to toggle this feature.~~
 
-**Regex Support:** Integrate regular expressions to allow for more complex search patterns.
+~~**Regex Support:** Integrate regular expressions to allow for more complex search patterns.~~
 
 **Line Number Display:** Modify the output to show line numbers along with the matching lines.
 
