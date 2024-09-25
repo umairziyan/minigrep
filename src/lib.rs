@@ -16,7 +16,9 @@ pub fn run() {
 
     let case_insensitive = config.get_flag("ignore_case");
 
-    process_lines(reader, re, case_insensitive);
+    let line_numbers = config.get_flag("line_numbers");
+
+    process_lines(reader, re, case_insensitive, line_numbers);
 }
 
 pub fn parse_args() -> ArgMatches {
@@ -42,11 +44,22 @@ pub fn parse_args() -> ArgMatches {
                 .help("Case insensitive search")
                 .action(clap::ArgAction::SetTrue),
         )
+        .arg(
+            Arg::new("line_numbers")
+                .short('l')
+                .long("line-numbers")
+                .help("Display line numbers")
+                .action(clap::ArgAction::SetTrue),
+        )
         .get_matches()
 }
 
-fn process_lines<T: BufRead + Sized>(reader: T, re: Regex, ci: bool) {
+fn process_lines<T: BufRead + Sized>(reader: T, re: Regex, ci: bool, ln: bool) {
+    let mut counter = 0;
     for line_ in reader.lines() {
+        // Increment the line counter
+        counter += 1;
+
         // Handle potential IO errors when reading the line
         let mut line = match line_ {
             Ok(line) => line,   // Successfully read the line
@@ -61,7 +74,11 @@ fn process_lines<T: BufRead + Sized>(reader: T, re: Regex, ci: bool) {
         // Check if the line matches the regex pattern
         if re.find(&line).is_some() {
             // Print the matching line
-            println!("{}", line);
+            if ln {
+                println!("Line {}: {}", counter, line);
+            } else {
+                println!("{}", line);
+            }
         }
     }
 }

@@ -46,6 +46,7 @@ Arguments:
 
 Options:
   -i, --ignore-case     Case insensitive search
+  -l, --line-number     Display line numbers
   -h, --help            Print help
   -V, --version         Print version
 ```
@@ -56,7 +57,7 @@ Options:
 
 ~~**Regex Support:** Integrate regular expressions to allow for more complex search patterns.~~
 
-**Line Number Display:** Modify the output to show line numbers along with the matching lines.
+~~**Line Number Display:** Modify the output to show line numbers along with the matching lines.~~
 
 **Search in Multiple Files:** Expand the functionality to search across multiple files or directories, rather than just a single file.
 
