@@ -1,5 +1,6 @@
 use minigrep::run;
 
-fn main() {
-    run()
+fn main() -> Result<(), std::io::Error> {
+    run()?;
+    Ok(())
 }

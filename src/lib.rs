@@ -1,7 +1,7 @@
 use clap::{Arg, ArgMatches, Command};
 use regex::Regex;
 use std::fs::File;
-use std::io::*;
+use std::io::{self, BufRead, BufReader};
 
 #[derive(Debug, PartialEq, Eq, Default)]
 struct RunParameters {
@@ -11,14 +11,14 @@ struct RunParameters {
     all_text: bool,
 }
 
-pub fn run() {
+pub fn run() -> Result<(), io::Error> {
     let config = parse_args();
 
     let query = config.get_one::<String>("query").unwrap();
     let re = Regex::new(query).unwrap();
     let input = config.get_one::<String>("file").unwrap();
+    let f = File::open(input)?;
 
-    let f = File::open(input).unwrap();
     let reader = BufReader::new(f);
 
     let run_parameters = RunParameters {
@@ -34,6 +34,7 @@ pub fn run() {
     };
 
     process_lines(reader, re, run_parameters);
+    Ok(())
 }
 
 pub fn parse_args() -> ArgMatches {
@@ -77,7 +78,7 @@ pub fn parse_args() -> ArgMatches {
             Arg::new("all_text")
                 .short('a')
                 .long("all-text")
-                .help("Print all document")
+                .help("Print all document, if this is enabled, matches will automatically be highlighted.")
                 .action(clap::ArgAction::SetTrue),
         )
         .get_matches()
