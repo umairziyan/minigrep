@@ -139,10 +139,11 @@ fn process_lines<T: BufRead + Sized>(reader: T, re: &Regex, run_parameters: &Run
         }
 
         match (run_parameters.highlight, run_parameters.line_numbers) {
-            (true, false) => println!("{}", highlighted_text),
-            (true, true) => println!("Line {}: {}", line_number, highlighted_text),
-            (false, true) => println!("Line {}: {}", line_number, line),
-            (false, false) => println!("{}: {}", line_number, line),
+            (true, false) => output.push(highlighted_text.to_string()),
+            (true, true) => output.push(format!("Line {}: {}", line_number, highlighted_text)),
+            (false, true) => output.push(format!("Line {}: {}", line_number, line)),
+            (false, false) => output.push(line.to_string()),
         }
     }
+    output
 }
