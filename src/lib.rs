@@ -72,6 +72,86 @@ pub fn run() -> Result<(), io::Error> {
     Ok(())
 }
 
+pub fn process_lines<T: BufRead + Sized>(
+    reader: T,
+    re: &Regex,
+    run_parameters: &RunParameters,
+) -> Vec<String> {
+    let mut line_number = 0;
+    let mut output: Vec<String> = Vec::new();
+    for line_ in reader.lines() {
+        line_number += 1;
+        let mat_line;
+        // Handle potential IO errors when reading the line
+        let line = match line_ {
+            Ok(line) => {
+                if run_parameters.case_insensitive {
+                    mat_line = line.to_lowercase();
+                } else {
+                    mat_line = line.clone();
+                }
+                line
+            } // Successfully read the line
+            Err(_) => {
+                continue;
+            } // Skip this iteration if an error occurs
+        };
+
+        let highlighted_text = match highlight_matches(&line, &mat_line, re, run_parameters) {
+            Some(text) => text,
+            None => {
+                if !run_parameters.all_text {
+                    continue;
+                } else {
+                    line.to_string()
+                }
+            }
+        };
+
+        let line_prefix = if run_parameters.line_numbers {
+            format!("Line {}: ", line_number)
+        } else {
+            String::new()
+        };
+
+        output.push(format!("{}{}", line_prefix, highlighted_text));
+    }
+    output
+}
+
+/// Highlight matching patterns in the line if requested
+fn highlight_matches(
+    line: &str,
+    search_line: &str,
+    re: &Regex,
+    params: &RunParameters,
+) -> Option<String> {
+    if !re.is_match(search_line) {
+        return None;
+    }
+    if !params.highlight {
+        return Some(line.to_string());
+    }
+    let highlight_start = "\x1b[100m";
+    let highlight_end = "\x1b[0m";
+
+    Some(
+        re.replace_all(search_line, |caps: &regex::Captures| {
+            if let Some(m) = caps.get(0) {
+                format!(
+                    "{}{}{}",
+                    highlight_start,
+                    &line[m.start()..m.end()],
+                    highlight_end
+                )
+            } else {
+                String::new()
+            }
+        })
+        .to_string(),
+    )
+}
+
 pub fn parse_args() -> ArgMatches {
     Command::new("minigrep")
         .version("0.1")
@@ -117,71 +197,4 @@ pub fn parse_args() -> ArgMatches {
                 .action(clap::ArgAction::SetTrue),
         )
         .get_matches()
-}
-
-pub fn process_lines<T: BufRead + Sized>(
-    reader: T,
-    re: &Regex,
-    run_parameters: &RunParameters,
-) -> Vec<String> {
-    let mut line_number = 0;
-    let mut output: Vec<String> = Vec::new();
-    for line_ in reader.lines() {
-        line_number += 1;
-        let mat_line;
-        // Handle potential IO errors when reading the line
-        let line = match line_ {
-            Ok(line) => {
-                if run_parameters.case_insensitive {
-                    mat_line = line.to_lowercase();
-                } else {
-                    mat_line = line.clone();
-                }
-                line
-            } // Successfully read the line
-            Err(_) => {
-                continue;
-            } // Skip this iteration if an error occurs
-        };
-
-        let mut highlighted_text = String::new();
-        let mut include = false;
-        let mut last_end = 0;
-
-        let highlight_start = "\x1b[100m"; // Bright white background
-        let highlight_end = "\x1b[0m"; // Reset formatting
-
-        // If the line contains the search query, print it.
-        for mat in re.find_iter(&mat_line) {
-            // Add the text before the match
-            highlighted_text.push_str(&line[last_end..mat.start()]);
-
-            // Add the highlighted match
-            highlighted_text.push_str(&format!(
-                "{}{}{}",
-                highlight_start,
-                &line[mat.start()..mat.end()],
-                highlight_end
-            ));
-
-            // Update last_end to the end of the current match
-            last_end = mat.end();
-            include = true;
-        }
-
-        // Add any remaining text after the last match
-        highlighted_text.push_str(&line[last_end..]);
-
-        if !run_parameters.all_text && !include {
-            continue;
-        }
-
-        match (run_parameters.highlight, run_parameters.line_numbers) {
-            (true, false) => output.push(highlighted_text.to_string()),
-            (true, true) => output.push(format!("Line {}: {}", line_number, highlighted_text)),
-            (false, true) => output.push(format!("Line {}: {}", line_number, line)),
-            (false, false) => output.push(line.to_string()),
-        }
-    }
-    output
 }
