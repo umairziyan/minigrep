@@ -120,35 +120,55 @@ pub fn process_lines<T: BufRead + Sized>(
 }
 
 /// Highlight matching patterns in the line if requested
+///
+/// This function searches for regex matches in 'updated_line' and highlights
+/// the corresponding part in the original 'line' if highlight is enabled.
+/// This is to remove any pre-processing done on the line before highlighting.
+///
+/// # Arguments
+///
+/// * `line` - The original line of text to potentially highlight.
+/// * `updated_line` - The line to search for matches (will differ from `line` in case-insensitive searches).
+/// * `re` - The compiled regex pattern to match against.
+/// * `params` - Runtime parameters, including whether to highlight matches.
+///
+/// # Returns
+///
+/// * `Some(String)` - A string with highlighted matches if found, or the original line if matches found but highlighting is disabled.
+/// * `None` - If no matches are found in the search line.
+///
 fn highlight_matches(
     line: &str,
-    search_line: &str,
+    updated_line: &str,
     re: &Regex,
     params: &RunParameters,
 ) -> Option<String> {
-    if !re.is_match(search_line) {
+    // Early return if no match is found
+    if !re.is_match(updated_line) {
         return None;
     }
+
+    // If highlighting is disabled, return the original line
     if !params.highlight {
         return Some(line.to_string());
     }
-    let highlight_start = "\x1b[100m";
-    let highlight_end = "\x1b[0m";
 
+    const HIGHLIGHT_START: &str = "\x1b[100m";
+    const HIGHLIGHT_END: &str = "\x1b[0m";
+
+    // Perform replacements and highlight matches
     Some(
-        re.replace_all(search_line, |caps: &regex::Captures| {
-            if let Some(m) = caps.get(0) {
+        re.replace_all(updated_line, |caps: &regex::Captures| {
+            caps.get(0).map_or_else(String::new, |m| {
                 format!(
                     "{}{}{}",
-                    highlight_start,
+                    HIGHLIGHT_START,
                     &line[m.start()..m.end()],
-                    highlight_end
+                    HIGHLIGHT_END
                 )
-            } else {
-                String::new()
-            }
+            })
         })
-        .to_string(),
+        .into_owned(),
     )
 }
 
