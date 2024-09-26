@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 clap = "4.5.18"
 regex = "1.10.6"
+predicates = "3.1.2"
+assert_cmd = "2.0.16"
