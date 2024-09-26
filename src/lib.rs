@@ -16,10 +16,6 @@ pub fn run() -> Result<(), io::Error> {
 
     let query = config.get_one::<String>("query").unwrap();
     let re = Regex::new(query).unwrap();
-    let input = config.get_one::<String>("file").unwrap();
-    let f = File::open(input)?;
-
-    let reader = BufReader::new(f);
 
     let run_parameters = RunParameters {
         case_insensitive: config.get_flag("ignore_case"),
@@ -33,7 +29,16 @@ pub fn run() -> Result<(), io::Error> {
         all_text: config.get_flag("all_text"),
     };
 
-    process_lines(reader, re, run_parameters);
+    if let Some(files) = config.get_many::<String>("file") {
+        for file in files {
+            println!("Checking file: {}", file);
+            let f = File::open(file)?;
+            let reader = BufReader::new(f);
+            process_lines(reader, &re, &run_parameters);
+        }
+    } else {
+        println!("no file found")
+    }
     Ok(())
 }
 
@@ -45,13 +50,13 @@ pub fn parse_args() -> ArgMatches {
             Arg::new("query")
                 .help("The pattern to search for")
                 .required(true)
-                .index(1),
         )
         .arg(
             Arg::new("file")
                 .help("The file to search")
                 .required(true)
-                .index(2),
+                .num_args(1..)
+                .value_delimiter(' ')
         )
         .arg(
             Arg::new("ignore_case")
@@ -84,7 +89,7 @@ pub fn parse_args() -> ArgMatches {
         .get_matches()
 }
 
-fn process_lines<T: BufRead + Sized>(reader: T, re: Regex, run_parameters: RunParameters) {
+fn process_lines<T: BufRead + Sized>(reader: T, re: &Regex, run_parameters: &RunParameters) {
     let mut line_number = 0;
     for line_ in reader.lines() {
         line_number += 1;
