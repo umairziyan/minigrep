@@ -2,20 +2,19 @@ use clap::{Arg, ArgMatches, Command};
 use regex::Regex;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
+use std::sync::Arc;
+use std::thread;
 
 #[derive(Debug, PartialEq, Eq, Default)]
-struct RunParameters {
-    case_insensitive: bool,
-    line_numbers: bool,
-    highlight: bool,
-    all_text: bool,
+pub struct RunParameters {
+    pub case_insensitive: bool,
+    pub line_numbers: bool,
+    pub highlight: bool,
+    pub all_text: bool,
 }
 
 pub fn run() -> Result<(), io::Error> {
     let config = parse_args();
-
-    let query = config.get_one::<String>("query").unwrap();
-    let re = Regex::new(query).unwrap();
 
     let run_parameters = RunParameters {
         case_insensitive: config.get_flag("ignore_case"),
@@ -36,12 +35,36 @@ pub fn run() -> Result<(), io::Error> {
         query.clone() // Otherwise, keep the original
     };
     let re = Regex::new(final_query.as_str()).unwrap();
+
     if let Some(files) = config.get_many::<String>("file") {
+        let run_parameters = Arc::new(run_parameters);
+        let re = Arc::new(re);
+
+        let mut handles = vec![];
+
         for file in files {
-            println!("Checking file: {}", file);
-            let f = File::open(file)?;
-            let reader = BufReader::new(f);
-            process_lines(reader, &re, &run_parameters);
+            let run_params = Arc::clone(&run_parameters);
+            let regex = Arc::clone(&re);
+            let file = file.to_string();
+
+            // Spawn a new thread for each file
+            let handle = thread::spawn(move || {
+                let f = File::open(&file);
+                match f {
+                    Ok(f) => {
+                        let reader = BufReader::new(f);
+                        let output = process_lines(reader, &regex, &run_params);
+                        println!("\nResults for file: {} \n{}", file, output.join("\n"));
+                    }
+                    Err(e) => {
+                        eprintln!("Error opening file {}: {}", file, e);
+                    }
+                }
+            });
+            handles.push(handle);
+        }
+        for handle in handles {
+            handle.join().unwrap();
         }
     } else {
         println!("no file found")
@@ -60,7 +83,7 @@ pub fn parse_args() -> ArgMatches {
         )
         .arg(
             Arg::new("file")
-                .help("The file to search")
+                .help("The file/s to search, multiple files can be added by separating them with a space, e.g. file1.txt, file2.txt")
                 .required(true)
                 .num_args(1..)
                 .value_delimiter(' ')
@@ -96,8 +119,13 @@ pub fn parse_args() -> ArgMatches {
         .get_matches()
 }
 
-fn process_lines<T: BufRead + Sized>(reader: T, re: &Regex, run_parameters: &RunParameters) {
+pub fn process_lines<T: BufRead + Sized>(
+    reader: T,
+    re: &Regex,
+    run_parameters: &RunParameters,
+) -> Vec<String> {
     let mut line_number = 0;
+    let mut output: Vec<String> = Vec::new();
     for line_ in reader.lines() {
         line_number += 1;
         let mat_line;
