@@ -29,6 +29,13 @@ pub fn run() -> Result<(), io::Error> {
         all_text: config.get_flag("all_text"),
     };
 
+    let query = config.get_one::<String>("query").unwrap();
+    let final_query = if run_parameters.case_insensitive {
+        query.to_lowercase() // Convert to lowercase if case-insensitive
+    } else {
+        query.clone() // Otherwise, keep the original
+    };
+    let re = Regex::new(final_query.as_str()).unwrap();
     if let Some(files) = config.get_many::<String>("file") {
         for file in files {
             println!("Checking file: {}", file);
@@ -93,18 +100,21 @@ fn process_lines<T: BufRead + Sized>(reader: T, re: &Regex, run_parameters: &Run
     let mut line_number = 0;
     for line_ in reader.lines() {
         line_number += 1;
+        let mat_line;
         // Handle potential IO errors when reading the line
-        let mut line = match line_ {
-            Ok(line) => line, // Successfully read the line
+        let line = match line_ {
+            Ok(line) => {
+                if run_parameters.case_insensitive {
+                    mat_line = line.to_lowercase();
+                } else {
+                    mat_line = line.clone();
+                }
+                line
+            } // Successfully read the line
             Err(_) => {
                 continue;
             } // Skip this iteration if an error occurs
         };
-
-        // Convert to lowercase if `ci` (case-insensitive flag) is true
-        if run_parameters.case_insensitive {
-            line = line.to_lowercase();
-        }
 
         let mut highlighted_text = String::new();
         let mut include = false;
@@ -114,7 +124,7 @@ fn process_lines<T: BufRead + Sized>(reader: T, re: &Regex, run_parameters: &Run
         let highlight_end = "\x1b[0m"; // Reset formatting
 
         // If the line contains the search query, print it.
-        for mat in re.find_iter(&line) {
+        for mat in re.find_iter(&mat_line) {
             // Add the text before the match
             highlighted_text.push_str(&line[last_end..mat.start()]);
 
