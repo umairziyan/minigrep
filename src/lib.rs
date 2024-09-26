@@ -119,24 +119,9 @@ pub fn process_lines<T: BufRead + Sized>(
     output
 }
 
-/// Highlight matching patterns in the line if requested
-///
-/// This function searches for regex matches in 'updated_line' and highlights
-/// the corresponding part in the original 'line' if highlight is enabled.
-/// This is to remove any pre-processing done on the line before highlighting.
-///
-/// # Arguments
-///
-/// * `line` - The original line of text to potentially highlight.
-/// * `updated_line` - The line to search for matches (will differ from `line` in case-insensitive searches).
-/// * `re` - The compiled regex pattern to match against.
-/// * `params` - Runtime parameters, including whether to highlight matches.
-///
-/// # Returns
-///
-/// * `Some(String)` - A string with highlighted matches if found, or the original line if matches found but highlighting is disabled.
-/// * `None` - If no matches are found in the search line.
-///
+/// Highlights regex matches in the given line if requested.
+/// If highlighting is disabled, returns the original line.
+/// Returns None if no matches are found.
 fn highlight_matches(
     line: &str,
     updated_line: &str,
