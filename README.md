@@ -38,17 +38,35 @@ To run minigrep, execute the binary with the search string and the file to searc
 
 ```sh
 
-Usage: minigrep [OPTIONS] <query> <file>
+Search for a pattern in a file
+
+Usage: minigrep [OPTIONS] <query> <file>...
 
 Arguments:
-  <query>               The pattern to search for
-  <file>                The file to search
+  <query>    The pattern to search for
+  <file>...  The file/s to search, multiple files can be added by separating them with a space, e.g. file1.txt, file2.txt
 
 Options:
-  -i, --ignore-case     Case insensitive search
-  -l, --line-number     Display line numbers
-  -h, --help            Print help
-  -V, --version         Print version
+  -i, --ignore-case   Case insensitive search
+  -l, --line-numbers  Display line numbers
+  -m, --highlight     Highlight matches
+  -a, --all-text      Print all document, if this is enabled, matches will automatically be highlighted.
+  -h, --help          Print help
+  -V, --version       Print version
+
+Examples:
+
+  minigrep "error" file1.txt                        The pattern "error" in `file1.txt`
+  minigrep "warning" file1.txt file2.txt            Search for "warning" in `file1.txt` and `file2.txt`
+  minigrep -i "network" file1.txt                   Search for "network" in `file1.txt` ignoring case
+  minigrep -l "timeout" file1.txt                   Show line numbers for "timeout" matches in `file1.txt`
+  minigrep -m "failed" file1.txt                    Highlight occurrences of "failed" in `file1.txt`
+  minigrep -a "response" file1.txt file2.txt        Print full content with "response" highlighted
+  minigrep -i -l "disk" file1.txt                   Case insensitive search with line numbers for "disk"
+  minigrep -m -l "memory" file1.txt                 Highlight "memory" and show line numbers in `file1.txt`
+  minigrep -i -m "status" file1.txt                 Case insensitive search for "status" with highlighting
+  minigrep -a -l -m "server" file1.txt file2.txt    Print entire file, highlight "server", and show line numbers
+
 ```
 
 ## Potential Features
@@ -59,15 +77,15 @@ Options:
 
 ~~**Line Number Display:** Modify the output to show line numbers along with the matching lines.~~
 
-**Search in Multiple Files:** Expand the functionality to search across multiple files or directories, rather than just a single file.
+~~**Search in Multiple Files:** Expand the functionality to search across multiple files or directories, rather than just a single file.~~
 
 **File Type Filtering:** Add a feature to filter files by type.
 
-**Highlight Matches:** Implement a way to highlight or emphasize matching text in the output to make it easier to spot.
+~~**Highlight Matches:** Implement a way to highlight or emphasize matching text in the output to make it easier to spot.~~
 
 **Support for Binary Files:** Add an option to handle binary files or to skip them entirely during the search.
 
-**Performance Improvements:** Optimize the search algorithm or implement parallel processing to handle large files or directories more efficiently.
+~~**Performance Improvements:** Optimize the search algorithm or implement parallel processing to handle large files or directories more efficiently.~~
 
 **Interactive Mode:** Create an interactive mode where users can input search queries and navigate through results more dynamically.
 
