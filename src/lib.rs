@@ -72,48 +72,37 @@ pub fn process_lines<T: BufRead + Sized>(
     re: &Regex,
     run_parameters: &RunParameters,
 ) -> Vec<String> {
-    let mut line_number = 0;
-    let mut output: Vec<String> = Vec::new();
-    for line_ in reader.lines() {
-        line_number += 1;
-        let mat_line;
-        // Handle potential IO errors when reading the line
-        let line = match line_ {
-            Ok(line) => {
-                if run_parameters.case_insensitive {
-                    mat_line = line.to_lowercase();
-                } else {
-                    mat_line = line.clone();
+    reader
+        .lines()
+        .enumerate()
+        .filter_map(|(line_number, line)| line.ok().map(|content| (line_number + 1, content)))
+        .filter_map(|(line_number, line)| {
+            let mat_line = if run_parameters.case_insensitive {
+                line.to_lowercase()
+            } else {
+                line.clone()
+            };
+            let highlighted_line = match highlight_matches(&line, &mat_line, re, run_parameters) {
+                Some(text) => text,
+                // Skip this line if all_text isn't selected.
+                None => {
+                    if !run_parameters.all_text {
+                        return None;
+                    } else {
+                        line.to_string()
+                    }
                 }
-                line
-            } // Successfully read the line
-            Err(_) => {
-                continue;
-            } // Skip this iteration if an error occurs
-        };
-
-        let highlighted_text = match highlight_matches(&line, &mat_line, re, run_parameters) {
-            Some(text) => text,
-            None => {
-                if !run_parameters.all_text {
-                    continue;
-                } else {
-                    line.to_string()
-                }
-            }
-        };
-
-        let line_prefix = if run_parameters.line_numbers {
-            format!("Line {}: ", line_number)
-        } else {
-            String::new()
-        };
-
-        output.push(format!("{}{}", line_prefix, highlighted_text));
-    }
-    output
+            };
+            // Add line numbers if requested
+            let line_prefix = if run_parameters.line_numbers {
+                format!("Line {}: ", line_number)
+            } else {
+                String::new()
+            };
+            Some(format!("{}{}", line_prefix, highlighted_line))
+        })
+        .collect()
 }
-
 /// Highlights regex matches in the given line if requested.
 /// If highlighting is disabled, returns the original line.
 /// Returns None if no matches are found.
