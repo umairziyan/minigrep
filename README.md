@@ -1,3 +1,5 @@
+![Rust](https://github.com/umairziyan/minigrep/actions/workflows/rust.yml/badge.svg)
+
 # minigrep
 
 A simple version of `grep` (**g**lobally search a **r**egular **e**xpression and
