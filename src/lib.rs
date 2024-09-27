@@ -12,20 +12,21 @@ pub struct RunParameters {
     pub all_text: bool,
 }
 
+impl RunParameters {
+    pub fn from_config(config: &ArgMatches) -> Self {
+        let all_text = config.get_flag("all_text");
+        Self {
+            case_insensitive: config.get_flag("ignore_case"),
+            line_numbers: config.get_flag("line_numbers"),
+            highlight: all_text || config.get_flag("highlight"),
+            all_text,
+        }
+    }
+}
+
 pub fn run() -> Result<(), io::Error> {
     let config = parse_args();
-
-    let run_parameters = RunParameters {
-        case_insensitive: config.get_flag("ignore_case"),
-        line_numbers: config.get_flag("line_numbers"),
-        // If all text is shown, automatically set highlight matching.
-        highlight: if config.get_flag("all_text") {
-            true
-        } else {
-            config.get_flag("highlight")
-        },
-        all_text: config.get_flag("all_text"),
-    };
+    let run_parameters = RunParameters::from_config(&config);
 
     let query = config.get_one::<String>("query").unwrap();
     let final_query = if run_parameters.case_insensitive {
