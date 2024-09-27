@@ -2,10 +2,9 @@ use clap::{Arg, ArgMatches, Command};
 use regex::Regex;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
-use std::sync::Arc;
 use std::thread;
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct RunParameters {
     pub case_insensitive: bool,
     pub line_numbers: bool,
@@ -37,41 +36,37 @@ pub fn run() -> Result<(), io::Error> {
     let re = Regex::new(final_query.as_str()).unwrap();
 
     if let Some(files) = config.get_many::<String>("file") {
-        let run_parameters = Arc::new(run_parameters);
-        let re = Arc::new(re);
+        let handles: Vec<_> = files
+            .map(|file| {
+                let run_params = run_parameters.clone();
+                let regex = re.clone();
+                let file = file.to_string();
 
-        let mut handles = vec![];
+                thread::spawn(move || process_file(file, regex, run_params))
+            })
+            .collect();
 
-        for file in files {
-            let run_params = Arc::clone(&run_parameters);
-            let regex = Arc::clone(&re);
-            let file = file.to_string();
-
-            // Spawn a new thread for each file
-            let handle = thread::spawn(move || {
-                let f = File::open(&file);
-                match f {
-                    Ok(f) => {
-                        let reader = BufReader::new(f);
-                        let output = process_lines(reader, &regex, &run_params);
-                        println!("\nResults for file: {} \n{}", file, output.join("\n"));
-                    }
-                    Err(e) => {
-                        eprintln!("Error opening file {}: {}", file, e);
-                    }
-                }
-            });
-            handles.push(handle);
-        }
         for handle in handles {
-            handle.join().unwrap();
+            if let Err(e) = handle.join().expect("Thread panicked") {
+                println!("Error processing file: {}", e);
+            }
         }
     } else {
-        println!("no file found")
+        println!("No file found");
     }
     Ok(())
 }
 
+/// Process a file and display the results
+fn process_file(file: String, re: Regex, run_parameters: RunParameters) -> Result<(), io::Error> {
+    let f = File::open(&file)?;
+    let reader = BufReader::new(f);
+    let results = process_lines(reader, &re, &run_parameters);
+    println!("\nResults for file: {} \n{}", file, results.join("\n"));
+    Ok(())
+}
+
+/// Process a line in the file and return the results
 pub fn process_lines<T: BufRead + Sized>(
     reader: T,
     re: &Regex,
@@ -157,6 +152,7 @@ fn highlight_matches(
     )
 }
 
+/// Parses the command-line arguments for the `minigrep` program.
 pub fn parse_args() -> ArgMatches {
     Command::new("minigrep")
         .version("0.1")
