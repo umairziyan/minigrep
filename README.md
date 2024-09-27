@@ -82,14 +82,14 @@ Examples:
 
 ~~**Search in Multiple Files:** Expand the functionality to search across multiple files or directories, rather than just a single file.~~
 
-**File Type Filtering:** Add a feature to filter files by type.
-
 ~~**Highlight Matches:** Implement a way to highlight or emphasize matching text in the output to make it easier to spot.~~
-
-**Support for Binary Files:** Add an option to handle binary files or to skip them entirely during the search.
 
 ~~**Performance Improvements:** Optimize the search algorithm or implement parallel processing to handle large files or directories more efficiently.~~
 
 **Interactive Mode:** Create an interactive mode where users can input search queries and navigate through results more dynamically.
 
 **Customizable Output Formatting:** Allow users to customize the format of the output, such as showing matches in a specific color or format.
+
+**File Type Filtering:** Add a feature to filter files by type.
+
+**Support for Binary Files:** Add an option to handle binary files or to skip them entirely during the search.
