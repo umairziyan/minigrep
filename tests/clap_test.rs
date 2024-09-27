@@ -9,13 +9,14 @@ fn test_case_sensitive_search() {
     let regex = Regex::new("Rust").unwrap();
 
     let params = RunParameters {
+        query: regex,
         case_insensitive: false,
         line_numbers: false,
         highlight: false,
         all_text: false,
     };
 
-    let result = process_lines(cursor, &regex, &params);
+    let result = process_lines(cursor, &params);
     assert_eq!(result, vec!["Rust programming"]);
 }
 
@@ -28,13 +29,14 @@ fn test_case_insensitive_search() {
     let regex = Regex::new("rust").unwrap();
 
     let params = RunParameters {
+        query: regex,
         case_insensitive: true,
         line_numbers: false,
         highlight: false,
         all_text: false,
     };
 
-    let result = process_lines(cursor, &regex, &params);
+    let result = process_lines(cursor, &params);
     assert_eq!(result, vec!["rust programming"]);
 }
 
@@ -45,6 +47,7 @@ fn test_highlighted_search() {
     let regex = Regex::new("Rust").unwrap();
 
     let params = RunParameters {
+        query: regex,
         case_insensitive: false,
         line_numbers: false,
         highlight: true,
@@ -54,7 +57,7 @@ fn test_highlighted_search() {
     let highlight_start = "\x1b[100m";
     let highlight_end = "\x1b[0m";
 
-    let result = process_lines(cursor, &regex, &params);
+    let result = process_lines(cursor, &params);
     assert_eq!(
         result,
         vec![format!(
@@ -71,13 +74,15 @@ fn test_search_with_line_numbers() {
     let regex = Regex::new("Rust").unwrap();
 
     let params = RunParameters {
+        query: regex,
+
         case_insensitive: false,
         line_numbers: true,
         highlight: false,
         all_text: false,
     };
 
-    let result = process_lines(cursor, &regex, &params);
+    let result = process_lines(cursor, &params);
     assert_eq!(result, vec!["Line 3: Rust programming"]);
 }
 
@@ -88,6 +93,8 @@ fn test_all_text_with_highlight() {
     let regex = Regex::new("Rust").unwrap();
 
     let params = RunParameters {
+        query: regex,
+
         case_insensitive: false,
         line_numbers: false,
         highlight: true,
@@ -97,7 +104,7 @@ fn test_all_text_with_highlight() {
     let highlight_start = "\x1b[100m";
     let highlight_end = "\x1b[0m";
 
-    let result = process_lines(cursor, &regex, &params);
+    let result = process_lines(cursor, &params);
     println!("{:?}", result);
     assert_eq!(
         result,
@@ -116,12 +123,14 @@ fn test_no_matches() {
     let regex = Regex::new("Java").unwrap();
 
     let params = RunParameters {
+        query: regex,
+
         case_insensitive: false,
         line_numbers: false,
         highlight: false,
         all_text: false,
     };
 
-    let result = process_lines(cursor, &regex, &params);
+    let result = process_lines(cursor, &params);
     assert!(result.is_empty());
 }
