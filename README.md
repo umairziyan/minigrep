@@ -36,10 +36,6 @@ Change directory to the location of the `mingrep` binary, normally stored in:
 To run minigrep, execute the binary with the search string and the file to search:
 
 ```sh
-./minigrep text file.txt
-```
-
-```sh
 
 Search for a pattern in a file
 
@@ -62,11 +58,7 @@ Examples:
   minigrep "error" file1.txt                        The pattern "error" in `file1.txt`
   minigrep "warning" file1.txt file2.txt            Search for "warning" in `file1.txt` and `file2.txt`
   minigrep -i "network" file1.txt                   Search for "network" in `file1.txt` ignoring case
-  minigrep -l "timeout" file1.txt                   Show line numbers for "timeout" matches in `file1.txt`
-  minigrep -m "failed" file1.txt                    Highlight occurrences of "failed" in `file1.txt`
   minigrep -a "response" file1.txt file2.txt        Print full content with "response" highlighted
-  minigrep -i -l "disk" file1.txt                   Case insensitive search with line numbers for "disk"
-  minigrep -m -l "memory" file1.txt                 Highlight "memory" and show line numbers in `file1.txt`
   minigrep -i -m "status" file1.txt                 Case insensitive search for "status" with highlighting
   minigrep -a -l -m "server" file1.txt file2.txt    Print entire file, highlight "server", and show line numbers
 
